@@ -114,3 +114,148 @@ priority 的逻辑顺序是：
 ```
 ✅ 01_requirements_and_design.md
 ```
+
+```
+Phase 4: 清洗编注区
+annotation_cleaner.py
+│
+├── 配置文件 transform_rules.yaml
+    ├── 编注前缀 annotation_prefixes
+    └── 从编注规则 annotation_rules 提取 Priority 34 清理规则
+└── clean_annotation()
+    （只处理 BlockType.ANNOTATION）
+    ├── 编注CSS类添加 (Priority 31) _add_annotation_css_class
+        ├── 获取原 CSS class
+        ├── 添加基础 annotation 类
+        ├── 合并 CSS class
+        └── 外层 <div> 保证
+    ├── 编注结构规范化 (Priority 32) _normalize_annotation_structure
+        └── 统一成 <div><p> ... </p></div> 结构
+            ├── 原来是 p，在外层创建 div
+            ├── 原来是 div 内无 p，创建 p
+            └── 原来是其他标签 → div + p
+    └── 编注内容清洗 (Priority 34) _clean_annotation_content
+        ├── 移除 hr，清理 br
+        ├── 递归遍历所有 .text 和 .tail
+            └── 空格和换行清理
+        ├── 整段 HTML 换行清理
+        └── <br> → <br/>
+```
+
+```
+Phase 5: 结构识别
+structure_recognizer.py
+│
+├── 配置文件 transform_rules.yaml
+├── _compile_patterns()
+    ├── 遍历所有结构识别规则 pattern、pattern_flags
+    ├── 编译正则表达式
+    ├── 构建规则列表 
+    └── 按 priority 排序
+└── recognize()
+    ├── 判断子标题满足条件
+        requires_keywords: "点击下载"
+        requires_keywords_mode: "any"
+    ├── 依次尝试识别规则 recognizer(block, prev_block)
+        self.recognition_rules = [
+            (51, "subtitle",  self._recognize_subtitle),
+            (52, "chapter",   self._recognize_chapter),
+            (53, "section",   self._recognize_section),
+            (53.5, "section_enum",   self._recognize_section_enum),
+            (54, "article",   self._recognize_article),
+            (55, "clause",    self._recognize_clause),
+            (56, "item",      self._recognize_item),
+        ]
+        ├── Priority 51: 识别子标题 _recognize_subtitle
+            ├── self._subtitle_keywords_ok = True
+            ├── prev_block 必须是 hr
+            ├── 获取 pattern
+            ├── 获取 pattern_type
+                ├── 如果 pattern_type: "content"（默认）→ 用 block.content（纯文本）做正则匹配
+                └── 如果 pattern_type: "html" → 用 block.original_html（原始 HTML 片段）做匹配
+            └── _apply_recognition()
+                ├── block type & level & css_class & id_prefix
+                └── _wrap_{rule_name}_html()
+                    └── _generate_html_from_template()
+                        ├── html_strategy & html_template & css_class & clean_content
+                        └── 根据 html_strategy 选择不同策略
+                            ├── 完全替换 full_replace 用新标签包纯文本
+                            ├── 保留内部标签换外层标签 wrap_keep_inner
+                                ├── 取原始 HTML 第一个元素
+                                ├── 提取 inner HTML _inner_html() 获取 DOM 里面的字符串
+                                └── 生成模板并填充
+                            └── 提取编号并用标签包围编号 wrap_number_only
+                                ├── 根据 pattern 匹配编号
+                                ├── DOM 里查找以编号开头的文本节点
+                                └── 把编号取出，包 <span class="xxx">
+        ├── Priority 52: 识别章 _recognize_chapter
+            └── _generic_recognize()
+                ├── 获取配置 & pattern & pattern_type
+                └── _apply_recognition()
+                    └── ... ...
+        ├── Priority 53: 识别节 _recognize_section
+            └── _generic_recognize()
+                └── ... ...
+        ├── Priority 53.5: 识别中文枚举节 _recognize_section_enum
+            └── _generic_recognize()
+                └── ... ...
+        ├── Priority 54: 识别条 _recognize_article
+            └── _generic_recognize()
+                └── ... ...
+        ├── Priority 55: 识别款 _recognize_clause
+            └── _generic_recognize()
+                └── ... ...
+        └── Priority 56: 识别项 _recognize_item
+            └── _generic_recognize()
+                └── ... ...
+    └── 未识别的保持TEXT类型
+```
+
+```
+Phase 6: 层级构建与编注归属
+hierarchy_builder.py
+annotation_context_assigner.py
+│
+├── Step 1: 为所有结构块生成ID （Priority 73）
+    @staticmethod 这个函数不需要用到类自己的属性（self），只是放在类里面当一个工具函数。
+    HierarchyBuilder.generate_ids()
+    │
+    ├── 构造 self.stack 容器栈
+        self.output HTML输出缓冲区
+        self.id_counters ID计数器
+        self.path_stack 路径栈
+        self.current_annotation_group_id 当前打开的编注组ID
+        self.annotation_group_info 编注组信息：{group_id: {"first_idx": int, "last_idx": int}}
+    └── generate_ids() 为每个结构块生成语义化 ID
+        ├── 初始化
+            ├── id_counters：结构分别计数
+            └── parent_stack：生成层级 ID
+        └── 遍历每个 block 除了 ANNOTATION, TEXT, HR
+            ├── 如果当前 block 的 level 小于等于父元素栈顶 → 弹出父层级
+            ├── 找父 ID
+                ├── 如果栈不为空 → 父 ID 就是栈顶节点的 ID
+                └── 如果为空 → 当前是顶层结构
+            ├── 为当前 prefix 增加计数器
+            ├── 生成 ID
+                ├── 顶级结构（章/节/条） → f"{prefix}-{id_counters[counter_key]}"
+                └── 层级结构（款/项） → f"{parent_id}-{prefix}-{id_counters[counter_key]}"
+            └── 把当前 block 作为父节点推进栈中
+│
+├── Step 2: 分配编注归属
+    AnnotationContextAssigner.assign_context()
+    │    
+    ├── Step 1: 识别连续编注组（Priority 76）
+        _identify_annotation_groups()
+        ├── 找到一个编注块后扫描连续出现的编注（跳过 TEXT/HR）
+            至少两个编注形成组
+            给组内所有编注 group_id
+
+    ├── Step 2: 为每条编注分配归属（Priority 77 - 79）
+        遍历所有 ANNOTATION block
+        _assign_annotation_context()
+
+│
+└── Step 3: 构建层级HTML
+    HierarchyBuilder.build()
+
+```
