@@ -220,7 +220,8 @@ annotation_context_assigner.py
     @staticmethod 这个函数不需要用到类自己的属性（self），只是放在类里面当一个工具函数。
     HierarchyBuilder.generate_ids()
     │
-    ├── 构造 self.stack 容器栈
+    ├── 初始化
+        self.stack 容器栈
         self.output HTML输出缓冲区
         self.id_counters ID计数器
         self.path_stack 路径栈
@@ -228,34 +229,77 @@ annotation_context_assigner.py
         self.annotation_group_info 编注组信息：{group_id: {"first_idx": int, "last_idx": int}}
     └── generate_ids() 为每个结构块生成语义化 ID
         ├── 初始化
-            ├── id_counters：结构分别计数
-            └── parent_stack：生成层级 ID
+            id_counters：结构分别计数
+            parent_stack：生成层级 ID
         └── 遍历每个 block 除了 ANNOTATION, TEXT, HR
-            ├── 如果当前 block 的 level 小于等于父元素栈顶 → 弹出父层级
-            ├── 找父 ID
-                ├── 如果栈不为空 → 父 ID 就是栈顶节点的 ID
+            ├── 如果当前 block 的 level <= parent_stack 栈顶 → pop() 推出
+            ├── 取父 ID
+                ├── 如果栈不为空 → 父 ID 就是 parent_stack 顶节点的 ID
                 └── 如果为空 → 当前是顶层结构
-            ├── 为当前 prefix 增加计数器
+            ├── prefix 计数 + 1
             ├── 生成 ID
-                ├── 顶级结构（章/节/条） → f"{prefix}-{id_counters[counter_key]}"
+                ├── 顶层结构（章/节/条） → f"{prefix}-{id_counters[counter_key]}"
                 └── 层级结构（款/项） → f"{parent_id}-{prefix}-{id_counters[counter_key]}"
-            └── 把当前 block 作为父节点推进栈中
+            └── 把当前 block 推进 parent_stack
 │
 ├── Step 2: 分配编注归属
     AnnotationContextAssigner.assign_context()
     │    
     ├── Step 1: 识别连续编注组（Priority 76）
         _identify_annotation_groups()
-        ├── 找到一个编注块后扫描连续出现的编注（跳过 TEXT/HR）
+        └── 找到一个编注块后扫描连续出现的编注（跳过 TEXT/HR）
             至少两个编注形成组
-            给组内所有编注 group_id
-
-    ├── Step 2: 为每条编注分配归属（Priority 77 - 79）
+            组内所有编注共享同一个 group_id
+    └── Step 2: 为每条编注分配归属（Priority 77 - 79）
         遍历所有 ANNOTATION block
-        _assign_annotation_context()
-
+        _assign_annotation_context() （Priority 79）
+            related_to: 它挂靠的结构类型
+            related_id: 对应结构块的 id
+            related_level: 对应结构块的层级 level
+        ├── 找前置结构块（Priority 77）
+            _find_preceding_structure()
+            从当前编注往前找到最近的一个结构块（章/节/条/款/项）
+        ├── 如果没有前置结构 → 文档级编注 "document"
+        ├── 取前置结构块的 index 和 block
+        ├── 判断当前前置结构块是不是它父节点下的最后一个子节点 （Priority 78）
+            _is_last_child() 前置结构块和当前编注 index
+            ├── 取前置结构块
+            ├── 从当前编注开始向后扫描
+            └── 直到遇到下一个结构节点
+                ├── 同级元素 → 前置元素不是最后子元素(有兄弟节点)
+                ├── 更深层级 → 前置元素不是最后子元素(有子节点)
+                └── 更高层级(level更小) → 前置元素是最后子元素
+        └── 根据判断是否是最后一个子节点的结果决定挂靠到谁
+            ├── 前置结构块是最后子元素 → 挂父元素
+                _find_parent_structure()
+                从当前结构块（child）往前扫描，第一个 level 更小的结构块，就是它的 parent
+            └── 不是最后子元素 → 挂前置结构块
 │
 └── Step 3: 构建层级HTML
     HierarchyBuilder.build()
+    ├── 统计每个编注组的起止 index
+    ├── 构建层级结构（Priority 71 – 72）
+        _process_block()
+        ├── 非结构块（ANNOTATION / HR / TEXT / TABLE）
+            ├── 如果是 ANNOTATION 关闭栈直到栈顶level <= related_level
+                pop 栈顶并 _close_container()
+            ├── _output_non_hierarchy_block()
+ANNOTATION：
+是否有 annotation_group_id 组内第一个编注，开启group容器
 
+        ├── 结构块（章/节/条/款/项）
+            ├── 关闭 level >= 当前 block 的 container
+            ├── pop 栈顶并 _close_container()
+            ├── 输出当前 block
+                ├── 是 container → _output_container_open() 并 push 入栈
+
+                ├── 不是 container → _output_non_container() 不入栈
+
+
+    ├── 关闭结构容器
+        _close_container()
+        ├── 输出 </div>
+        └── 从 path_stack 中 pop 该 block
+    └── 关闭编注组容器
+    
 ```
