@@ -283,19 +283,26 @@ annotation_context_assigner.py
         ├── 非结构块（ANNOTATION / HR / TEXT / TABLE）
             ├── 如果是 ANNOTATION 关闭栈直到栈顶level <= related_level
                 pop 栈顶并 _close_container()
-            ├── _output_non_hierarchy_block()
-ANNOTATION：
-是否有 annotation_group_id 组内第一个编注，开启group容器
-
-        ├── 结构块（章/节/条/款/项）
+            └── _output_non_hierarchy_block()
+                ├── ANNOTATION: 按编注组的起止位置开关 <div class="annotation-group"> 并加入 data-* 属性
+                ├── HR: 跳过 annotation-group 中的 HR，其他直接输出
+                └── TEXT/TABLE: 直接输出
+        └── 结构块（章/节/条/款/项）
             ├── 关闭 level >= 当前 block 的 container
             ├── pop 栈顶并 _close_container()
-            ├── 输出当前 block
+            └── 输出当前 block
                 ├── 是 container → _output_container_open() 并 push 入栈
-
-                ├── 不是 container → _output_non_container() 不入栈
-
-
+                    ├── 结构块 id append 到 path_stack 并构造 data-path
+                    └── 输出 <div ...> 作为结构容器并设置 id/CSS class/data-path
+                        ├── CHAPTER: original_html / <h4>
+                        ├── SECTION / SECTION_ENUM: original_html / <h5>
+                        ├── SUBTITLE: original_html / <h3>
+                        ├── ARTICLE: original_html / <p><strong>
+                        ├── CLAUSE: 加 clause-title class
+                        └── ITEM: 加 item-title
+                └── 不是 container → _output_non_container() 不入栈
+                    ├── 构建 data-path
+                    └── 用 <span> 包 id/CSS class/data-path 写入内容并闭合
     ├── 关闭结构容器
         _close_container()
         ├── 输出 </div>
