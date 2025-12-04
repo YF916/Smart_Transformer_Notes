@@ -310,3 +310,31 @@ annotation_context_assigner.py
     └── 关闭编注组容器
     
 ```
+
+```
+拼回原文并保留头部/尾部
+修复可能重复的"）"
+```
+
+```
+Phase 7:
+│
+└── 公式检查与括号修正
+    formula_checker.py
+    ├── 仅检查不修正
+        ├── find_formulas()
+            ├── 遍历文本节点
+            ├── is_formula(): 包含符号&数字&长度合理
+            ├── check_brackets(): 检查括号多余/匹配/闭合
+            └── 返回公式信息
+        └── report(): 生成检查报告
+    └── 修正
+        fix_brackets_in_html()
+        ├── 遍历文本节点
+        ├── is_formula()
+        ├── check_brackets()
+        └── 替换修正文本并保持与原文相同的缩进和换行
+            elem.replace_with(original_text.replace(text, corrected))
+│
+└── 最终验证与清理（Priority 91-1000）
+```
