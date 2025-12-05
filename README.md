@@ -18,12 +18,12 @@ Phase 2：内容标注 + 结构分区 （先语义后结构）
 ├── process() 语义层处理（文本级）
 │   │
 │   ├── 加载 YAML 中的 annotation 正则规则
-│   ├── 在整篇 HTML（或 scope）中查找所有编注区间
+│   ├── 在整篇 HTML 或 scope 中查找所有编注区间
 │   ├── 对内容进行语义分类：
 │   │     ├── 编注片段 → <div class="xxx-annotation">
 │   │     └── 正文片段 → <div class="main-content">
 │   ├── 输出带语义标签的 HTML
-│   └── （目的：先把“内容类型”标清楚，为结构化做准备）
+│   └── （目的：先把内容类型标清楚，为结构化做准备）
 │
 └── partition() 结构层处理（DOM级）
     │
@@ -328,21 +328,21 @@ Phase 7:
             ├── 正则清理复杂情况
             └── 清理多余换行&空格&标签间空白
         └── formula_checker.FormulaChecker.fix_brackets_in_html()
-    ├── 文本顺序验证 Priority 91-92
+    ├── 文本顺序验证 (Priority 91-92)
         validator.TextOrderValidator.validate()
         ├── 提取纯文本 _extract_text()
         ├── 归一化(统一换行符并去除空白字符) _normalize_text()
         ├── 逐字符比较文本 _compare_text()
         └── 生成报告 _calculate_match_rate(): difflib.SequenceMatcher().ratio() 计算相似度
-    ├── HTML结构验证 Priority 93-94
+    ├── HTML结构验证 (Priority 93-94)
         validator.HTMLValidator.validate()
         └── 查找未闭合的标签 _find_unclosed_tags()
-    ├── 内容完整性验证 Priority 95-96
+    ├── 内容完整性验证 (Priority 95-96)
         validator.ContentIntegrityValidator.validate()
         ├── 字符数对比
         ├── 段落数对比
         └── 结构元素对比 _check_structure_elements() 统计各类结构元素
-    └── 敏感字样清理 Priority 999-1000
+    └── 敏感字样清理 (Priority 999-1000)
         ├── cleaner.SensitiveTextCleaner.clean()
         └── 检查是否完全清理 cleaner.SensitiveTextCleaner.verify_cleaned()
 ```
