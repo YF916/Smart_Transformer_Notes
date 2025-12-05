@@ -1,4 +1,12 @@
-
+```
+✅ 01_requirements_and_design.md
+✅ 02_implementation_plan.md
+✅ 03_rule_execution_order.md
+✅ 04_seven_step_mapping.md
+✅ 05_execution_order_analysis.md
+✅ deep_audit_report.md
+✅ README.md
+```
 ```
 原始 HTML 文件
     ↓
@@ -7,7 +15,7 @@
 ```
 Phase 2：内容标注 + 结构分区 （先语义后结构）
 │
-├── 一、process() —— “语义层”处理（文本级）
+├── process() 语义层处理（文本级）
 │   │
 │   ├── 加载 YAML 中的 annotation 正则规则
 │   ├── 在整篇 HTML（或 scope）中查找所有编注区间
@@ -17,7 +25,7 @@ Phase 2：内容标注 + 结构分区 （先语义后结构）
 │   ├── 输出带语义标签的 HTML
 │   └── （目的：先把“内容类型”标清楚，为结构化做准备）
 │
-└── 二、partition() —— “结构层”处理（DOM级）
+└── partition() 结构层处理（DOM级）
     │
     ├── 使用 lxml 解析 process 输出的 HTML
     ├── 按 DOM 顺序遍历节点
@@ -30,6 +38,7 @@ Phase 2：内容标注 + 结构分区 （先语义后结构）
     ├── 跳过 annotation/table 等已整体处理的子节点
     └── 输出 ContentBlock 列表
 ```
+
 ```
 Phase 3: 清洗 main-content
 main_content_cleaner.py
@@ -84,10 +93,6 @@ priority 的逻辑顺序是：
 1. 最会破坏结构的要最早处理 (td/p/tag 修复)
 2. 会影响 DOM 结构的放中间，清除结构冗余 (hr 独立化 / 去空 p / 去嵌套容器)
 3. 视觉层面的清理放最后 (空白规范化 / br 清理)
-```
-
-```
-✅ 01_requirements_and_design.md
 ```
 
 ```
