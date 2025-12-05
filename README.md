@@ -337,4 +337,35 @@ Phase 7:
             elem.replace_with(original_text.replace(text, corrected))
 │
 └── 最终验证与清理（Priority 91-1000）
+    validator.py
+    cleaner.py
+    ├── 处理原始 HTML 和 processed HTML
+        ├── cleaner.SensitiveTextCleaner.clean() 清理敏感字样
+            ├── 基础文本替换
+            ├── 正则清理复杂情况
+            └── 清理多余换行&空格&标签间空白
+        └── formula_checker.FormulaChecker.fix_brackets_in_html()
+    ├── 文本顺序验证 Priority 91-92
+        validator.TextOrderValidator.validate()
+        ├── 提取纯文本 _extract_text()
+        ├── 归一化(统一换行符并去除空白字符) _normalize_text()
+        ├── 逐字符比较文本 _compare_text()
+        └── 生成报告 _calculate_match_rate(): difflib.SequenceMatcher().ratio() 计算相似度
+    ├── HTML结构验证 Priority 93-94
+        validator.HTMLValidator.validate()
+        └── 查找未闭合的标签 _find_unclosed_tags()
+    ├── 内容完整性验证 Priority 95-96
+        validator.ContentIntegrityValidator.validate()
+        ├── 字符数对比
+        ├── 段落数对比
+        └── 结构元素对比 _check_structure_elements() 统计各类结构元素
+    └── 敏感字样清理 Priority 999-1000
+        ├── cleaner.SensitiveTextCleaner.clean()
+        └── 检查是否完全清理 cleaner.SensitiveTextCleaner.verify_cleaned()
+```
+
+```
+│
+└── 确定输出路径
+└── 输出文件
 ```
