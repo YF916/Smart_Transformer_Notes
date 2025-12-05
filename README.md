@@ -20,22 +20,22 @@ preprocessor.py
     ├── 解析 HTML 前
         ├── Priority 1.5: 文本替换 _text_replacements() → _fix_multiple_body_tags()
         ├── Priority 3.4: table 内 p 清理 _cleanup_table_p_tags()
-        ├── Priority 3.5 按配置处理 p _apply_p_rules_with_scope(html_content, stage="pre")
+        ├── Priority 3.5 按配置处理 p _apply_p_rules_with_scope(stage="pre") → _apply_p_rules(stage="pre")
     ├── 解析 HTML 后
-        ├── Priority 2: 标签替换（b -> strong）
-            _get_scope_targets()
+        ├── Priority 2: 标签替换（b → strong）
+            _get_scope_targets(): 获取需要处理的节点列表
             _replace_tags()
-        ├── Priority 3: 删除标签（保留内容）
-            _remove_style_script()
+        ├── Priority 3: 删除标签（font保留内容，style/script完全删除）
+            _remove_style_script(): 全局删除style和script标签
             _remove_tags()
-        ├── Priority 3.5: p 标签规范化（排除table）
-            _normalize_p_tags()
+        ├── Priority 3.5: p 标签规范化（排除table上下文）
+            _normalize_p_tags() → 递归 _normalize_element_children()
         ├── Priority 4: 编码规范化（输出时保证UTF-8）
             _postprocess_html()
         ├── 字符串级后处理与收口
-            _apply_p_rules(result, stage="post")
-            _apply_p_rules(result, stage="final")
-            _apply_post_p_rules(result)
+            _apply_p_rules(stage="post")
+            _apply_p_rules(stage="final")
+            _apply_post_p_rules()
 ```
 
 ```
