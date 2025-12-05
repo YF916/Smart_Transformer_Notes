@@ -13,7 +13,34 @@
 ```
 
 ```
+Phase 1: 预处理
+preprocessor.py
+│
+├── process() → preprocess()
+    ├── 解析 HTML 前
+        ├── Priority 1.5: 文本替换 _text_replacements() → _fix_multiple_body_tags()
+        ├── Priority 3.4: table 内 p 清理 _cleanup_table_p_tags()
+        ├── Priority 3.5 按配置处理 p _apply_p_rules_with_scope(html_content, stage="pre")
+    ├── 解析 HTML 后
+        ├── Priority 2: 标签替换（b -> strong）
+            _get_scope_targets()
+            _replace_tags()
+        ├── Priority 3: 删除标签（保留内容）
+            _remove_style_script()
+            _remove_tags()
+        ├── Priority 3.5: p 标签规范化（排除table）
+            _normalize_p_tags()
+        ├── Priority 4: 编码规范化（输出时保证UTF-8）
+            _postprocess_html()
+        ├── 字符串级后处理与收口
+            _apply_p_rules(result, stage="post")
+            _apply_p_rules(result, stage="final")
+            _apply_post_p_rules(result)
+```
+
+```
 Phase 2：内容标注 + 结构分区 （先语义后结构）
+partitioner.py
 │
 ├── process() 语义层处理（文本级）
 │   │
