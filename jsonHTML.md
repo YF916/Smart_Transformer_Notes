@@ -9,28 +9,23 @@
 8. 将正文内容渲染为 HTML
 9. 输出生成的 HTML 文件到指定目录
 
+
 图片本地化处理器：把 HTML 里的图片 <img src="https://..."> 下载到本地，并把 src 改成本地路径
+```
 localize_fragment()
 输入 html_str
-|
-  若包含 <img ? 
-|
-     是
-      |
-      v
-[用 lxml 包装成 <div> 解析 DOM]
-      |
-      v
-[遍历所有 <img>]
-      |
-      v
-[取 src] -> 调用 download(src) -> [得到 new_src]
-      |
-      v
-[把 img.src 替换为 new_src]
-      |
-      v
-[输出更新后的 innerHTML]
+│
+├── 若包含 <img ? 
+    ├── 用 lxml 包装成 <div> 解析 DOM
+        │
+        遍历所有 <img>
+        │
+        取 src -> 调用 download(src) -> 得到 new_src
+        │
+        把 img.src 替换为 new_src
+        │
+        输出更新后的 innerHTML
+```
 
 
 
