@@ -1,7 +1,8 @@
 ```
 程序整体流程如下：
-1. 遍历输入目录中的 JSON 文件，逐个进行处理：图片本地化处理器
+1. 遍历输入目录中的 JSON 文件，逐个进行处理
 2. 读取并解析 JSON 数据
+-- [脱敏处理] --
 3. 根据文件名生成文档标题
 4. 加载统一的 CSS 样式
 5. 初始化图片本地化处理器: localizer = ImageLocalizer(OUTPUT_DIR, title)
@@ -9,6 +10,24 @@
 7. 构建正文的层级结构: meta.get("law_regulation_article_jsons") → build_tree()
 8. 将正文内容渲染为 HTML: render_tree()
 9. 输出生成的 HTML 文件到指定目录: build_html() 组装成完整 HTML 文档 → write_text()
+```
+
+```
+[脱敏处理]：对 JSON 进行敏感词清洗，删除可见文本中的敏感词，不清理 URL、<a href>、<img src> 等标签属性内容。
+compile_sensitive_patterns(["alpha"]): 编译敏感词 patterns (IGNORECASE)
+↓
+desensitize()
+递归遍历 dict/list 定位需要清洗的字符串
+├─ desensitize_html_text()
+    unescape()
+    判断字符串是否包含 HTML 标签
+    ├─ 不包含
+        ↓
+        纯文本正则替换，删除敏感词
+    └─ 包含
+        ↓
+        解析成 DOM
+        处理文本节点(text/tail)
 ```
 
 ```
