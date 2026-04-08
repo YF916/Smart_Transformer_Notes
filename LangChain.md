@@ -66,7 +66,7 @@ def authenticate(..., runtime: ToolRuntime)
 * 返回 `Command` 可以修改 state
 * 可读 runtime.context, runtime.tool_call_id
 
-#### 5. Middleware （控制行为策略）
+#### 6. Middleware （控制行为策略）
 
 ##### (1) `SummarizationMiddleware`
 
