@@ -1,16 +1,65 @@
+# LangGraph Notes
+```text
 State: Data
-Node: functions
-edges: Control Flow
+Node: Functions
+Edges: Control Flow
 Checkpointing/Memory
 Human in the loop
+```
+
+### State
 
 ```python
 class State(TypedDict):
     nlist: Annotated[List[str], operator.add]
 ```
-LangGraph 设计：
-LangGraph 期望 node 是“无副作用、声明式”
-reducer 才是合并逻辑的统一入口，是“线程安全合并机制”
-LangGraph 内部会：
-收集所有 node 输出
-再统一用 reducer 合并
+
+* **多个 node 同时更新 state 时，由 reducer 决定如何合并**
+
+### Conditional Edge
+#### 方式一：`add_conditional_edges` （节点外部）
+
+```python
+builder.add_conditional_edges("a", conditional_edge)
+```
+
+```python
+def conditional_edge(state: State) -> Literal["b", "c", END]:
+    ...
+```
+
+##### 执行流程
+
+```text
+node a 执行
+   ↓
+返回 state
+   ↓
+调用 conditional_edge(state)
+   ↓
+决定 next node
+```
+
+#### 方式二：`Command`（节点内部）
+
+```python
+def node_a(state: State) -> Command[Literal["b", "c", END]]:
+    return Command(
+        update=State(...),
+        goto=[next_node]
+    )
+```
+
+##### 执行流程
+
+```text
+node a 执行
+   ↓
+返回 Command:
+   - update state
+   - goto next node
+   ↓
+直接跳转
+```
+
+
