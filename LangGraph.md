@@ -62,4 +62,16 @@ node a 执行
 直接跳转
 ```
 
+### Memory
+```python
+from langgraph.checkpoint.memory import InMemorySaver
+
+memory = InMemorySaver()
+graph = builder.compile(checkpointer=memory)
+config = {"configurable": {"thread_id": "1"}}
+result = graph.invoke(input_state, config)
+```
+* state 会累加
+* 每个 thread_id 是独立 memory
+* invoke 是在已有 state 上继续执行
 
