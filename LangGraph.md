@@ -75,3 +75,31 @@ result = graph.invoke(input_state, config)
 * 每个 thread_id 是独立 memory
 * invoke 是在已有 state 上继续执行
 
+### Interrupt
+#### Setup
+
+1. 在 node 中使用 interrupt()
+```python
+from langgraph.types import interrupt
+
+def node_a(state):
+    if unexpected_input:
+        return interrupt("Invalid input, please confirm")
+```
+2. 必须有 checkpointer
+```python
+graph = builder.compile(checkpointer=memory)
+```
+* interrupt 期间：state = 被保存（checkpoint）
+* resume 时：恢复之前的 state → 接着执行
+
+#### Execution
+```
+node_a → interrupt()
+        ↓
+graph 停止
+        ↓
+admin 需要给 decision
+        ↓
+load state → 继续 graph
+```
