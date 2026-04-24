@@ -103,3 +103,29 @@ admin 需要给 decision
         ↓
 load state → 继续 graph
 ```
+
+### Email Agent Workflow Notes
+* **State** 是核心，node 读/写 state，不传参，而是用 state 传递信息
+* 3个流程控制方式：
+    * Edge: builder.add_edge("a", "b")
+    * Command: return Command(goto="xxx")
+    * interrupt: interrupt(...)
+* 工作流结构上融入了 RAG
+    * R（Retrieve）
+      ```python
+      def search_documentation(state: EmailAgentState) -> EmailAgentState:
+      """Search knowledge base for relevant information"""
+      ```
+    * A（Augment）
+      ```python
+      def write_response(state: EmailAgentState) -> Command[Literal["human_review", "send_reply"]]:
+      "Generate response using context and route based on quality"""
+      ...
+      context_sections = []
+      context_sections.append(f"Relevant documentation:\n{formatted_docs}")
+      ...
+      ```
+    * G（Generate）
+      ```python
+      response = llm.invoke(draft_prompt)
+      ```
