@@ -51,6 +51,10 @@
 - Certificate II in Automotive Servicing Technology
 - Certificate II in Construction Pathways
 
+## Partners
+- Become an Agent
+- Education Agents
+
 ## Locations
 - Adelaide Campus
 - Sydney Campus
