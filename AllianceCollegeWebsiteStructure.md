@@ -28,6 +28,23 @@
 - Individual Support – Home and Community (Ageing) Skill Set
 - Individual Support – Home and Community (Disability) Skill Set
 
+### Fee for service
+#### Business
+- Certificate III in Business
+- Diploma of Business
+- Advanced Diploma of Business
+- Graduate Diploma of Management (Learning)
+#### Building and Construction
+- Certificate IV in Building and Construction (Building)
+- Diploma of Civil Construction Design
+- Advanced Diploma of Civil Construction Design
+#### Hospitality
+- Certificate III in Commercial Cookery
+- Certificate III in Patisserie
+- Certificate IV in Kitchen Management
+- Diploma of Hospitality Management
+- Advanced Diploma of Hospitality Management
+
 ## VET in Schools
 - Certificate II in Cookery
 - Certificate II in Hospitality
